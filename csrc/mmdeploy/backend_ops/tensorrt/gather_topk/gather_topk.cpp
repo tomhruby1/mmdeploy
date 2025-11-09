@@ -54,8 +54,10 @@ bool GatherTopk::supportsFormatCombination(int pos, const nvinfer1::PluginTensor
               ioDesc[pos].format == nvinfer1::TensorFormat::kLINEAR);
     case 1:
       // indices
-      return ioDesc[pos].type == nvinfer1::DataType::kINT32 &&
-             ioDesc[pos].format == nvinfer1::TensorFormat::kLINEAR;
+      return (ioDesc[pos].type == nvinfer1::DataType::kINT32 &&
+             ioDesc[pos].format == nvinfer1::TensorFormat::kLINEAR ||
+              (ioDesc[pos].type == nvinfer1::DataType::kINT64 &&
+              ioDesc[pos].format == nvinfer1::TensorFormat::kLINEAR));
     case 2:
       // output
       return ioDesc[pos].type == ioDesc[0].type && ioDesc[pos].format == ioDesc[0].format;
@@ -95,9 +97,9 @@ int GatherTopk::enqueue(const nvinfer1::PluginTensorDesc *inputDesc,
                               indice_nbDims, (float *)output, stream);
       break;
 
-    case nvinfer1::DataType::kINT32:
+    case nvinfer1::DataType::kINT64:
       gather_topk_impl<int>((int *)data, (int *)indices, dims, nbDims, indices_dims, indice_nbDims,
-                            (int *)output, stream);
+                            (int *)output, stream); // to int64_t here as well?
       break;
     default:
       break;
