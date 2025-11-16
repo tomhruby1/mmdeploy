@@ -3,8 +3,8 @@
 #define TRT_GRID_SAMPLER_KERNEL_HPP
 #include <cuda_runtime.h>
 
-template <typename scalar_t>
-void gather_topk_impl(const scalar_t* input, const int* indices, const int64_t* dims, int nbDims,
+template <typename scalar_t, typename index_t>
+void gather_topk_impl(const scalar_t* input, const index_t* indices, const int64_t* dims, int nbDims,
                       const int64_t* indices_dims, int indice_nbDims, scalar_t* output,
                       cudaStream_t stream);
 #endif  // TRT_GRID_SAMPLER_KERNEL_HPP

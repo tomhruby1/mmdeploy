@@ -90,19 +90,25 @@ int GatherTopk::enqueue(const nvinfer1::PluginTensorDesc *inputDesc,
   void *output = outputs[0];
 
   auto data_type = inputDesc[0].type;
+  auto indices_type = inputDesc[1].type;
 
-  switch (data_type) {
-    case nvinfer1::DataType::kFLOAT:
-      gather_topk_impl<float>((float *)data, (int *)indices, dims, nbDims, indices_dims,
-                              indice_nbDims, (float *)output, stream);
-      break;
-
-    case nvinfer1::DataType::kINT64:
-      gather_topk_impl<int>((int *)data, (int *)indices, dims, nbDims, indices_dims, indice_nbDims,
-                            (int *)output, stream); // to int64_t here as well?
-      break;
-    default:
-      break;
+  // Dispatch based on both data type and indices type
+  if (data_type == nvinfer1::DataType::kFLOAT) {
+    if (indices_type == nvinfer1::DataType::kINT32) {
+      gather_topk_impl<float, int32_t>((float *)data, (int32_t *)indices, dims, nbDims,
+                                       indices_dims, indice_nbDims, (float *)output, stream);
+    } else if (indices_type == nvinfer1::DataType::kINT64) {
+      gather_topk_impl<float, int64_t>((float *)data, (int64_t *)indices, dims, nbDims,
+                                       indices_dims, indice_nbDims, (float *)output, stream);
+    }
+  } else if (data_type == nvinfer1::DataType::kINT32) {
+    if (indices_type == nvinfer1::DataType::kINT32) {
+      gather_topk_impl<int32_t, int32_t>((int32_t *)data, (int32_t *)indices, dims, nbDims,
+                                         indices_dims, indice_nbDims, (int32_t *)output, stream);
+    } else if (indices_type == nvinfer1::DataType::kINT64) {
+      gather_topk_impl<int32_t, int64_t>((int32_t *)data, (int64_t *)indices, dims, nbDims,
+                                         indices_dims, indice_nbDims, (int32_t *)output, stream);
+    }
   }
 
   return 0;
